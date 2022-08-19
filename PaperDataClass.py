@@ -11,8 +11,8 @@ class PaperDataClass(object):
     def __init__(self,paperId=-1):
         if (paperId<0):
             self.paperId=paperId
-            print("请使用正确id定义文章")
-            self.__del__()
+            print("当前paper对象为空")
+            #self.__del__()
             return 
         #定义一个类变量默认值的字典，用于初始化
         self.defaultValueDict={"paperName":"",

@@ -163,7 +163,8 @@ class PaperDataXmlFileManagement(object):
 
     def saveXmlFile(self,fileName=''):
         if fileName=="":
-            fileName=self.xmlFilePath+'\\'+self.xmlFileName
+            #fileName=self.xmlFilePath+'\\'+self.xmlFileName
+            fileName=self.xmlFilePath+self.xmlFileName
         #self.paperDataTree=ET.ElementTree(self.root)
         self.paperDataTree.write(fileName,encoding='UTF-8')
         
@@ -245,9 +246,116 @@ class PaperDataXmlFileManagement(object):
             self.paperDataList.append(tempPaperData)
             
         return 1
-            
-            
-            
+
+import time
+
+#管理工程配置文件的类
+#需要固定一个相对路径下的安全文件夹和配置文件名称
+#如果没有这个配置文件，则需要生成一个，命固定名称，存入固定位置
+#工程关闭之前需要更新配置文件
+"""配置变量需要包含：
+1.上次操作时间
+2.上次所使用的的xml文件
+3.
+"""
+class paperAssistConfigManager(object):
+    def __init__(self,configFolderPath,configFileName):
+        #定义配置文件中需要有的变量
+        self.lastLoginDate=""
+        self.lastLogoutDate=""
+        self.lastUsingProjectFilePath=""
+        self.newLoginDate=""
+        self.newLogoutDate=""
+        #定义这个对象在使用时的一些变量
+        self.configFolderPath=""
+        self.configFileName=""
+        ##配置文件成功导入的标志位，特别重要
+        self.flagPaperAssistFileInput=False
+        ##初始化过程中成功输入文件路径的标志位
+        self.flagFilePathInput=False
+        ##初始化过程中成功输入文件名称的标志位
+        self.flagFileNameInput=False
+        #配置文件需要用的到xml数据结构对象
+        ##定义xml文件的根节点
+        self.root=ET.Element("configFile")
+        #定义xml数据结构
+        self.DataTree=ET.ElementTree(self.root)
+        #判断输入的配置文件路径和名称是否合法，如果合法就给标志位置位
+        if (configFolderPath not in (None,"")) and (configFileName not in (None,"")):
+            self.configFolderPath=configFolderPath
+            self.configFileName=configFileName
+            #检查文件名的后缀是不是.xml
+            if not self.configFileName.endswith(".xml"):
+                self.configFileName+=".xml"
+            self.flagFilePathInput=True
+            self.flagFileNameInput=True
+        else :
+            print("文献管理助手初始化文件读取失败")
+            self.flagPaperAssistFileInput=False
+    #从配置文件中读取数据，这是最基本的操作，整个软件特别依赖这个过程
+    def configFileInput(self):
+        #记录下来本次的登录时间
+        self.newLoginDate=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime( int(time.time())))
+
+        if not self.flagFilePathInput or not self.flagFileNameInput:
+            print("配置文件的路径或文件名不全,无法初始化")
+            return -1
+        filePath=self.configFolderPath+self.configFileName
+        if filePath in (None,''):
+            print("配置文件路径为空，无法读取")
+            return -1
+        #读入树状结构
+        try:
+            self.DataTree=ET.parse(filePath)
+        except:
+            print("读取XML文件失败")
+            return -1
+        print("成功读入配置文件{}，正在分析".format(filePath))
+        #1.读取根节点
+        self.root=self.DataTree.getroot()
+        #2.读取子节点
+        ##上次登录时间
+        self.lastLoginDateRoot=self.root.find("lastLoginDate")
+        self.lastLoginDate=self.lastLoginDateRoot.text
+        ##上次退出时间
+        self.lastLogoutDateRoot=self.root.find("lastLogourDate")
+        self.lastLogoutDate=self.lastLogoutDateRoot.text
+        ##上次使用的工程文件路径
+        self.lastUsingProjectFilePathRoot=self.root.find("lastUsingProjectFilePath")
+        self.lastUsingProjectFilePath=self.lastUsingProjectFilePathRoot.text
+        
+        #将配置文件读入的标志位赋值
+        self.flagPaperAssistFileInput=True
+        #更新本次登录时间
+        return 1
+
+
+        
+    def configFileCreate(self,projectFilePath):
+        #记录下来当前时间，作为退出时间
+        self.newLogoutDate=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime( int(time.time())))
+        #软件配置文件已经读入成功，不需要重新写
+        
+        #在此处重写软件配置文件
+        self.root.clear()
+        self.lastLoginDateRoot=ET.SubElement(self.root, "lastLoginDate")
+        self.lastLoginDateRoot.text=self.newLoginDate
+        
+        self.lastLogoutDateRoot=ET.SubElement(self.root, "lastLogourDate")
+        self.lastLogoutDateRoot.text=self.newLogoutDate
+        self.lastUsingProjectFilePathRoot=ET.SubElement(self.root, "lastUsingProjectFilePath")
+        self.lastUsingProjectFilePathRoot.text=(projectFilePath)
+        configFilePath=self.configFolderPath+self.configFileName
+        try:
+            self.DataTree.write(configFilePath,encoding='UTF-8')
+            print()
+        except:
+            print("配置文件保存失败")
+            return -1
+
+        return 1
+    
+    
             
 
 
