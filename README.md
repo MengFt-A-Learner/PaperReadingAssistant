@@ -25,8 +25,8 @@
 
 9.V2.1版本添加了“专注模式”，只显示“文献主要内容”和“文献特点”两个文字输入框
 
-10. V2.0版本“增加谷歌翻译”按钮，点击后可自动使用默认浏览器打开谷歌翻译，网址“https://translate.google.cn/”
+10.V2.0版本“增加谷歌翻译”按钮，点击后可自动使用默认浏览器打开谷歌翻译，网址“https://translate.google.cn/”
 ###以上更新日期：2022/08/24
 
-11. 打开谷歌翻译，直接设置为英文翻中文模式，网址“https://translate.google.cn/?sl=en&tl=zh-CN&op=translate”
+11.打开谷歌翻译，直接设置为英文翻中文模式，网址“https://translate.google.cn/?sl=en&tl=zh-CN&op=translate”
 ###以上更新日期：2022/09/21
