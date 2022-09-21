@@ -10,6 +10,8 @@ from paperDataSaveInXml import paperAssistConfigManager,PaperDataXmlFileManageme
 from re import split
 from webbrowser import open_new
 import time
+import os
+
 class PaperImportGui2(object):
     def __init__(self):
         print("一个文献编辑窗口被实例化")
@@ -61,7 +63,8 @@ class PaperImportGui2(object):
         self.flagCurrentPaperSave=0
         ##记录使用快捷键触发的整个工程文件的保存情况，是ctrl+s的中间保持flag
         self.keyboardSaveFlag=False
-        
+        self.mainWindowIcon_32 = b'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'
+
     def projectInitFromConfigFile(self):
         print("读取配置文件")
         #将配置文件读取结果更新进标志位
@@ -74,7 +77,7 @@ class PaperImportGui2(object):
         self.menuDef=[["文件",['创建工程','导入文件','保存文件','导出文件','另存文件(暂不可用)','关闭']],
                   ["配置",["保存配置文件","清理配置文件"]],
                       ["Help",["关于"]]]
-        #右键换出列表
+        #右键唤出列表
         self.rightClickMenuDef=[[],['导出文件','选取文章','刷新','取消','关闭']]
         #管理现有文章的界面
         manageWindowLayout=[
@@ -99,7 +102,7 @@ class PaperImportGui2(object):
         
         #管理一个文章，详细修改信息的界面
         paperReadingLayout=[
-            [sg.Button("选中文献"),sg.Button('确认修改')
+            [sg.Button("选中文献"),sg.Button('确认修改'),sg.Button('删除文献')
              #,sg.Button('折叠界面'),sg.Button('专注模式')
              ],
             [sg.Listbox(values = self.existPaperNameList, 
@@ -130,8 +133,18 @@ class PaperImportGui2(object):
             [],#觉得可用的图片(最多两张)
             [],#存储路径
             ]
+        #专注模式，仅保留文献内容输入功能
+        focusedReadingModeLayout=[
+            [sg.Button("确认内容修改"),sg.Button("打开源文件_2"),sg.Button("谷歌翻译")],
+            [sg.Text('文章主要内容',font='Times 10',size=(8,2)),
+             sg.Multiline(size=(100,3), expand_x=True, expand_y=True, key='currentPaperSummary_2',enable_events=True)], #文章主要内容
+            [sg.Text('特点或不足',font='Times 10',size=(8,2)),
+             sg.Multiline(size=(100,3), expand_x=True, expand_y=True, key='currentPapercharacteristic_2',enable_events=True)],#文章特点
+            ]
+
         #用于打印调试信息的界面
-        logging_layout = [[sg.Text("Anything printed will display here!",font='Times 10')],
+        logging_layout = [[sg.Button("调试功能1"),sg.Button("调试功能2")],
+            [sg.Text("Anything printed will display here!",font='Times 10')],
                           [sg.Multiline(size=(60,15), font='Times 8', expand_x=True, expand_y=True, write_only=True,
                                         reroute_stdout=True, reroute_stderr=True, echo_stdout_stderr=True, autoscroll=True, auto_refresh=True)]
                           ]
@@ -142,6 +155,7 @@ class PaperImportGui2(object):
         self.layout+=[[sg.TabGroup([[sg.Tab("文献管理",manageWindowLayout)],
                                [sg.Tab("文献载入",inputWindowLayout)],
                                [sg.Tab("详细信息",paperReadingLayout)],
+                               [sg.Tab("专注模式",focusedReadingModeLayout)],
                                [sg.Tab('调试信息', logging_layout)]])        
             ]]
         #为画面布局layout设置窗口大小调整的小机关（右下角）
@@ -251,8 +265,10 @@ class PaperImportGui2(object):
         self.window['currentPaperFiledLevel2'].update(self.currentPaperManaged.fieldLevel2)
         self.window['currentPaperSummary'].update(self.currentPaperManaged.summaryReExtract)
         self.window['currentPapercharacteristic'].update(self.currentPaperManaged.characteristic)
+        self.window['currentPaperSummary_2'].update(self.currentPaperManaged.summaryReExtract)
+        self.window['currentPapercharacteristic_2'].update(self.currentPaperManaged.characteristic)
         self.window['currentPapercompleteness'].update(self.currentPaperManaged.completeness)
-    
+          
     def windowCurrentPaperDataUpdate(self):
         tempName=self.window['currentPaperName'].get()
         tempLanguage=self.window['currentPaperUsedLanguage'].get()
@@ -280,7 +296,32 @@ class PaperImportGui2(object):
                 return 1
         print("[详细界面：异常]未找到相对应id的文章对象，当前编辑信息无法更新入前台文章列表")
         return 0
+    #删除一个文章的函数
+    def deletePaperById(self,paperId):
+        if paperId < 0 or paperId >= self.numberPaperExisted:
+            print("删除文章流程异常：文章id不存在")
+            return -1
+        #删除前台的paperList
+        self.paperListFrontEnd.pop(paperId)
+        #删除后台的paperList,否则，删除将失效
+        #self.paperListBackEnd.pop(paperId)
+        #赶紧把当前前台文献数量减1
+        self.numberPaperExisted-=1
+        #判断一下，如果当前删除的是最后一位，就完事儿了；否则还得重新调整其他文章对象的id
+        if not self.numberPaperExisted == paperId:
+            for i in range(paperId,self.numberPaperExisted):
+                self.paperListFrontEnd[i].paperId -=1
+                #self.paperListBackEnd[i].paperId -=1
+        return 1
+
+    #返回当前时间
+    def currentTime(self):
+        currentTime=time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime( int(time.time())))
+        return currentTime
+
+    
     #定义窗口事件相应函数
+
     def windowEventMainwindowEventMain(self):
         #定义窗口self.window
         self.window=sg.Window('阅读文献小助手(撰写综述中...)_V1.0',
@@ -290,12 +331,19 @@ class PaperImportGui2(object):
                          grab_anywhere=True,
                          resizable=True, 
                          margins=(0,0), 
-                         use_custom_titlebar=True, 
+                         #use_custom_titlebar=True, 
                          finalize=True, 
                          keep_on_top=True,
-                         return_keyboard_events=True)
+                         #return_keyboard_events=True,
+                         titlebar_background_color=sg.GREENS[3],
+                         use_custom_titlebar=True, 
+                         titlebar_icon=self.mainWindowIcon_32,
+                         titlebar_font=(sg.DEFAULT_FONT, 14, 'bold'), 
+                         icon=self.mainWindowIcon_32
+                         )
         #设置窗口尺寸
         #self.window.set_min_size(self.window.size)
+        self.window.set_min_size((820,270))
         #读取配置文件
         self.flagConfigFileRead=self.configFileManager.configFileInput()
         if not self.flagConfigFileRead==1:
@@ -327,7 +375,28 @@ class PaperImportGui2(object):
             #设置退出机制,退出while循环，直接结束全部流程
             if event in (None, sg.WIN_CLOSED,'关闭'):
                 self.window.Close()
-                break  
+                break 
+            if not event in ("__TIMEOUT__"):    
+                print("当前时间为：{}，激活事件{}".format(self.currentTime(),event))
+            if event in ('调试功能1'):
+                print("执行调试功能1：")
+                ########
+                #self.window.close()
+                ##########
+                continue
+            if event in ('调试功能2'):
+                print("执行调试功能2：")
+                #####################
+                try:
+                    print(self.window.size)
+                    
+                except Exception as err:
+                    print(err)
+                ######################
+                continue
+            
+            
+            
             #相应“创建工程”指令,需要输入xml文件的保存路径和文件名，并更新当前使用的后台文件管理对象
             ##创建工程的功能是主要功能之一，在配置文件导入失败或需要创建新工程时启用
             if event in ('创建工程'):
@@ -454,7 +523,35 @@ class PaperImportGui2(object):
                 #tempPaperId=int(str.split(paperNameString[0],',')[0])
                 #currentPaper=paperList[tempPaperId]
                 self.windowCurrentPaperDataUpdate()
-            
+            if event in ("删除文献"):
+                #删除一篇文献
+                #删除的是
+                paperNameString=self.window['existingPaperList'].get()
+                if paperNameString==[]:
+                    sg.popup("尚未选中待删除文献",font='Times 15',keep_on_top=True)
+                    continue
+                print("删除文献：",paperNameString)
+                tempPaperId=int(str.split(paperNameString[0],',')[0])
+                #删除id对应的文章，同时重整文章id
+                self.deletePaperById(tempPaperId)
+                self.windowNumberUpdate()
+
+                
+            if event in ("确认内容修改"):
+                #将“专注模式”下输入的文章主要内容，更新到前台系统数据中，并刷新“详细信息”中的相应内容
+                tempPaperSummary=self.window['currentPaperSummary_2'].get()
+                self.currentPaperManaged.updatePaperSummary(tempPaperSummary)
+                self.window['currentPaperSummary'].update(tempPaperSummary)
+                #将“专注模式”下输入的文章特点，更新到前台系统数据中，并刷新“详细信息”中的相应内容
+                tempPapercharacteristic=self.window['currentPapercharacteristic_2'].get()
+                self.currentPaperManaged.updatePapercharacteristic(tempPapercharacteristic)
+                self.window['currentPapercharacteristic'].update(tempPapercharacteristic)
+                #根据文章id查询，完成前台到后台的刷新，保证前后台数据一致
+                for i in range(len(self.paperListFrontEnd)):
+                    if self.paperListFrontEnd[i].paperId==self.currentPaperManaged.paperId:
+                        self.paperListFrontEnd[i]=self.currentPaperManaged
+                        continue
+                
             ##测试“折叠界面功能，其实是使用set_size()函数，重塑窗口尺寸
             if event in ("折叠界面"):
                 #foldSize=(10,5)
@@ -464,34 +561,41 @@ class PaperImportGui2(object):
             
             
             ##在“详细界面”中，通过窗口上文件地址，打开源文件pdf或caj文件,
-            if event in ("打开源文件"):
+            if event in ("打开源文件","打开源文件_2"):
                 #从窗口读取“文章id"
                 #tempId=int(self.window['currentPaperId'].get())
                 #从窗口读取Paper Path，用于打开文件
-                tempPaperPath=self.window['currentPaperFilePath'].get()
-                if tempPaperPath.endswith(".pdf"):
-                     #paperList[tempId].paperFilePath=tempPaperPath
-                     open_new(tempPaperPath)
-                     #window["currentPaperFilePath"].update(tempPaperPath)
-                elif tempPaperPath.endswith(".caj"):
-                     open_new(tempPaperPath)
+                try:
+                    tempPaperPath=self.window['currentPaperFilePath'].get()
+                    if tempPaperPath.endswith(".pdf"):
+                         #paperList[tempId].paperFilePath=tempPaperPath
+                         open_new(tempPaperPath)
+                         #window["currentPaperFilePath"].update(tempPaperPath)
+                    elif tempPaperPath.endswith(".caj"):
+                         open_new(tempPaperPath)
+                        
+                    else :
+                        tempPaperPath=sg.popup_get_file("重新定义文件路径",title="文件路径不存在",keep_on_top=True)
+                        if tempPaperPath.endswith(".pdf") or tempPaperPath.endswith(".caj"):
+                            self.currentPaperManaged.paperFilePath=tempPaperPath
+                            #self.paperListFrontEnd[tempId].paperFilePath=tempPaperPath
+                            open_new(tempPaperPath)
+                            self.window["currentPaperFilePath"].update(tempPaperPath)
+                        #重新定义文件路径异常结束的应对方法    
+                        else: 
+                            print("tempPaperPath=",tempPaperPath)
+                            #sg.popup("取消：定义文件路径")
+                            self.window["currentPaperFilePath"].update("")
+                            continue
                     
-                else :
-                    tempPaperPath=sg.popup_get_file("重新定义文件路径",title="文件路径不存在",keep_on_top=True)
-                    if tempPaperPath.endswith(".pdf") or tempPaperPath.endswith(".caj"):
-                        self.currentPaperManaged.paperFilePath=tempPaperPath
-                        #self.paperListFrontEnd[tempId].paperFilePath=tempPaperPath
-                        open_new(tempPaperPath)
-                        self.window["currentPaperFilePath"].update(tempPaperPath)
-                    #重新定义文件路径异常结束的应对方法    
-                    else: 
-                        print("tempPaperPath=",tempPaperPath)
-                        #sg.popup("取消：定义文件路径")
-                        self.window["currentPaperFilePath"].update("")
-                        continue
-                
-                print("打开源文件，路径为",)
-                
+                    print("打开源文件，路径为",)
+                except Exception as err:
+                    print("打开源文件流程报错：",err)
+              
+            if event in ("谷歌翻译"):
+                #打开谷歌翻译，直接设置为英文翻中文模式
+                open_new("https://translate.google.cn/?sl=en&tl=zh-CN&op=translate")
+                print("打开网址：https://translate.google.cn/")
             if event in (self.keyboardCallBackDict["leftCtrl"],self.keyboardCallBackDict["rightCtrl"]):
                 print("按键触发CTRL")    
                 self.keyboardSaveFlag=True
@@ -504,7 +608,10 @@ class PaperImportGui2(object):
                 print("保存配置文件",self.currentBackendProject.xmlFilePath+self.currentBackendProject.xmlFileName)
                 
                 self.configFileManager.configFileCreate(self.currentBackendProject.xmlFilePath+self.currentBackendProject.xmlFileName)
+        #在接触流程前，保存一下工程文件
+        self.saveXmlFile()
         print("保存配置文件",self.currentBackendProject.xmlFilePath+self.currentBackendProject.xmlFileName)
+        
         self.configFileManager.configFileCreate(self.currentBackendProject.xmlFilePath+self.currentBackendProject.xmlFileName)
                 
 
