@@ -18,7 +18,7 @@ class PaperDataClass(object):
         self.defaultValueDict={"paperName":"",
                                "paperUsedLanguage":0,    
                                "paperFilePath":"未载入",
-                               "paperPicturePath":[],
+                               "paperPicturePath":["",""],
                                "paperPublishTime":"",
                                "publicationLevel":0,
                                "publicationName":"未定义",
@@ -32,7 +32,7 @@ class PaperDataClass(object):
         self.languageList=("未定义","中文","英文","日文","西班牙语")
         self.paperUsedLanguage=self.defaultValueDict["paperUsedLanguage"]
         self.paperFilePath=self.defaultValueDict["paperFilePath"]
-        self.paperPicturePath=self.defaultValueDict["paperPicturePath"]
+        self.paperPicturePathList=self.defaultValueDict["paperPicturePath"]
         self.paperImportTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime( int(time.time())))
         self.paperPublishTime=self.defaultValueDict["paperPublishTime"]
         self.publiocationList=("未定义","顶刊","顶会","非顶刊SCI1区","SCI2区","SCI3-4区","EI","中文核心")
@@ -143,7 +143,7 @@ class PaperDataClass(object):
         self.paperName=paperParaDict["paperName"]
         self.paperUsedLanguage=paperParaDict["paperUsedLanguage"]
         self.paperFilePath=paperParaDict["paperFilePath"]
-        self.paperPicturePath=paperParaDict["paperPicturePath"]
+        self.paperPicturePathList=paperParaDict["paperPicturePath"]
         self.paperImportTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime( int(time.time())))
         self.paperPublishTime=paperParaDict["paperPublishTime"]
         self.publicationLevel=paperParaDict["publicationLevel"]
@@ -153,7 +153,7 @@ class PaperDataClass(object):
         self.summaryReExtract=paperParaDict["summaryReExtract"]
         self.characteristic=paperParaDict["characteristic"]
         self.Availability=paperParaDict["Availability"] 
-        
+        self.paperPicturePathList=paperParaDict["picturePathList"]
         return 1
         
 

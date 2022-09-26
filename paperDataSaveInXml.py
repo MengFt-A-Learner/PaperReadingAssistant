@@ -7,7 +7,8 @@ Created on Wed Aug 10 09:28:54 2022
 
 import xml.etree.ElementTree as ET
 from PaperDataClass import PaperDataClass
-
+import os
+import re
 
 class PaperDataXmlFileManagement(object):
     #在传入固定xml的根节点后，根据
@@ -35,6 +36,7 @@ class PaperDataXmlFileManagement(object):
         self.fieldLevel2RootList=[]
         self.summaryReExtractRootList=[]
         self.characteristicRootList=[]
+        self.paperPicturePathListRootList=[] #存储图片地址的根节点
     #新建一个文章的子节点，需要传入节点的名字
     def creatPaperChildRoot(self,paperChildRootName,inputPaperData):
         #定义一个子节点
@@ -54,7 +56,7 @@ class PaperDataXmlFileManagement(object):
         #3.paperUsedLanguage
         self.paperLanguageRootList.append(ET.SubElement(tempPaperRoot, "paperLanguage"))
         self.paperLanguageRootList[tempIndex].text=str(inputPaperData.paperUsedLanguage)
-        #4.paperPicturePath
+        #4.paperFilePath
         self.paperFilePathRootList.append(ET.SubElement(tempPaperRoot, "paperFilePath"))
         self.paperFilePathRootList[tempIndex].text=inputPaperData.paperFilePath
         #5.paperPublishTime
@@ -80,7 +82,13 @@ class PaperDataXmlFileManagement(object):
         self.summaryReExtractRootList[tempIndex].text=str(inputPaperData.summaryReExtract)        
         #12.characteristic
         self.characteristicRootList.append(ET.SubElement(tempPaperRoot, "characteristic"))
-        self.characteristicRootList[tempIndex].text=str(inputPaperData.characteristic)                
+        self.characteristicRootList[tempIndex].text=str(inputPaperData.characteristic)  
+        #13.paperPicturePathListRootList
+        self.paperPicturePathListRootList.append(ET.SubElement(tempPaperRoot, "picturePathList"))
+        tempText=""
+        for path in inputPaperData.paperPicturePathList:
+            tempText+=path+","
+        self.paperPicturePathListRootList[tempIndex].text=tempText
 
 
 
@@ -112,7 +120,12 @@ class PaperDataXmlFileManagement(object):
         self.summaryReExtractRootList[tempIndex].text=str(inputPaperData.summaryReExtract)        
         #12.characteristic
         self.characteristicRootList[tempIndex].text=str(inputPaperData.characteristic)                
-        #13.        
+        #13.paperPicturePathListRootList
+        tempText=""
+        for path in inputPaperData.paperPicturePathList:
+            tempText+=path+","
+        self.paperPicturePathListRootList[tempIndex].text=tempText
+        
         #14.        
         #15.      
         #16.
@@ -224,10 +237,16 @@ class PaperDataXmlFileManagement(object):
             
             tempCharacteristicRoot=paperData.find("characteristic")
             self.characteristicRootList.append(tempCharacteristicRoot)
+            
+            tempPaperPicturePathListRoot=paperData.find("picturePathList")
+            self.paperPicturePathListRootList.append(tempPaperPicturePathListRoot)
+            tempPicturePathList=tempPaperPicturePathListRoot.text.split(",")
+                
             #新建一个paperData的类，用于存储这些数据，并存入paperDataList中
             
             tempPaperData=PaperDataClass(int(tempPaperIdRoot.text))
             print("导入一个文件对象，id为",tempPaperIdRoot.text)
+            
             #将文章的数据保存成dict型，用于设定paperData类对象
             tempPaperDataDict={"paperName":tempPaperNameRoot.text,
                                    "paperUsedLanguage":int(tempPaperLanguageRoot.text),    
@@ -240,7 +259,8 @@ class PaperDataXmlFileManagement(object):
                                    "fieldLevel2":tempFieldLevel2Root.text,
                                    "summaryReExtract":tempSummaryReExtractRoot.text,
                                    "characteristic":tempCharacteristicRoot.text,
-                                   "Availability":int(tempAvailabilityRoot.text)}
+                                   "Availability":int(tempAvailabilityRoot.text),
+                                   "picturePathList":tempPicturePathList}
             #查看paperDataClass获取相应设定
             tempPaperData.setAllPaperParaInOne(tempPaperDataDict)
             self.paperDataList.append(tempPaperData)
@@ -271,6 +291,8 @@ class paperAssistConfigManager(object):
         self.configFileName=""
         ##配置文件成功导入的标志位，特别重要
         self.flagPaperAssistFileInput=False
+        ##
+        self.flagFileExisted=False
         ##初始化过程中成功输入文件路径的标志位
         self.flagFilePathInput=False
         ##初始化过程中成功输入文件名称的标志位
@@ -326,9 +348,48 @@ class paperAssistConfigManager(object):
         
         #将配置文件读入的标志位赋值
         self.flagPaperAssistFileInput=True
+        
+        self.flagFileExisted=True
         #更新本次登录时间
         return 1
+    
+    #搜索配置文件是否存在，如配置文件夹为空，返回0；如配置文件存在返回1；如配置文件夹非空但文件不存在，返回-1，是一种奇怪的异常！
+    def configFileSearch(self):
+        #读取配置文件夹下的全部文件
+        fileList=os.listdir(self.configFolderPath)
+        tempFileName=re.split(r'/',self.configFileName)[-1]
+        if fileList ==[]:
+            print("配置文件夹是空文件夹")
+            self.flagFileExisted=False
+            return 0
+        for file in fileList:
+            if  file == tempFileName:
+               self.flagFileExisted=True
+               return 1
+        if self.flagFileExisted==False:
+            print("[配置异常！]配置文件夹非空，但配置文件不存在")
+            print("fileList=",fileList)
+            print("self.configFileName=",self.configFileName)
+            return -1
+    #清空配置文件所在的文件夹
+    def configFolderClear(self):
+        configFileResearch=self.configFileSearch()
+        tempFileName=self.configFolderPath+self.configFileName
 
+        if configFileResearch==0:
+            print("配置文件不存在")
+            self.flagFileExisted=False
+            return 0
+        if configFileResearch==1:
+            os.remove(tempFileName)
+            print("删除配置文件")
+        if configFileResearch==-1:
+            os.removedirs(self.configFolderPath)
+            print("清空配置文件夹")
+        self.flagFileExisted=False
+        return 1
+
+    
 
         
     def configFileCreate(self,projectFilePath):
