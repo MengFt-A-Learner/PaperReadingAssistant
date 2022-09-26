@@ -33,6 +33,8 @@ class PaperDataClass(object):
         self.paperUsedLanguage=self.defaultValueDict["paperUsedLanguage"]
         self.paperFilePath=self.defaultValueDict["paperFilePath"]
         self.paperPicturePathList=self.defaultValueDict["paperPicturePath"]
+        #定义一个文章最多对应100张图片
+        self.maxPictureNumber=100
         self.paperImportTime=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime( int(time.time())))
         self.paperPublishTime=self.defaultValueDict["paperPublishTime"]
         self.publiocationList=("未定义","顶刊","顶会","非顶刊SCI1区","SCI2区","SCI3-4区","EI","中文核心")
@@ -44,6 +46,8 @@ class PaperDataClass(object):
         self.characteristic=self.defaultValueDict["characteristic"]
         self.Availability=self.defaultValueDict["Availability"] 
         self.completeness=0
+        
+        
     #设定路径的函数
     def setFilePath(self,path):
         if path=="":
@@ -171,9 +175,23 @@ class PaperDataClass(object):
         else : print("文章可用性未定义")
         print("源文件名：{}".format(self.paperFilePath))
         return 0
-
-        
-
+    
+    #定义函数，控制一个文章的图片总量，如果超出总量，则要从最后面删除，默认限定是100张图
+    def controlPictureNumber(self):
+        pictureNumber=len(self.paperPicturePathList)
+        if pictureNumber>self.maxPictureNumber:
+            try:
+                del self.paperPicturePathList[self.maxPictureNumber:]
+                print("文章id：{}，图片数量超限，已自动清理图片从{}至{}".format(self.paperId,self.maxPictureNumber+1,pictureNumber))
+                return 1
+            except Exception as e:
+                print("图片数量控制流程报错：",e)
+                return -1
+        else:
+            return 0
+    
+    
+    
     
     def __del__(self):
         print("析构了一个paperDataClass对象,paperId=",self.paperId)

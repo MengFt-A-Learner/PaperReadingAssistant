@@ -12,7 +12,7 @@ from webbrowser import open_new
 import time
 import os
 from GrubAndCutScreen import GrubAndCutScreen
-
+from PIL import Image
 class PaperImportGui2(object):
     def __init__(self):
         print("一个文献编辑窗口被实例化")
@@ -444,7 +444,9 @@ class PaperImportGui2(object):
     def createSubWindowTwoFromMain(self):
         #进入这个函数是为了激活子窗口2
         #先判断是否有选中的文章，如果否则return
-        imageSize=(640,640)
+        imageSize=(640,480)
+        subWindowTwoSize=(640*2,480)
+        #subWindowTwoSize=(imageSize[0]*2,imageSize[1])
         if self.currentPaperManaged.paperId<0:
             print("尚未选中要编辑的文章")
             sg.popup_auto_close("尚未选中要阅读的文章",auto_close_duration=1,keep_on_top=True)
@@ -459,20 +461,33 @@ class PaperImportGui2(object):
                     img1FileName=".\imageLibrary\imgSample1.png"
                     
             except Exception as e:  
-                img1FileName=".\imageLibrary\imgSample1.png"
+                img1FileName=".\imageLibrary\imgSample.png"
                 print("图片1导入错误,",e)
             try:
                 img2FileName=self.currentPaperManaged.paperPicturePathList[1]
                 if not img2FileName.endswith("png"):
-                    img2FileName=".\imageLibrary\imgSample1.png"
+                    img2FileName=".\imageLibrary\imgSample2.png"
                     
             except Exception as e:  
-                img2FileName=".\imageLibrary\imgSample1.png"
+                img2FileName=".\imageLibrary\imgSample2.png"
                 print("图片1导入错误,",e)
+            tempSize1=self.pictureResize(img1FileName,img1FileName,size=imageSize,reShape=False,type="png")
+            tempSize2=self.pictureResize(img2FileName,img2FileName,size=imageSize,reShape=False,type="png")
+            if (not tempSize1==-1) and (not tempSize2==-1):
+                subWindowTwoSize=(tempSize1[0]+tempSize2[0],tempSize1[1])
+            else:
+                tempSize1=imageSize
+                tempSize2=imageSize
+                
+            #控制一下最多的图片,在这儿强制图片最大数量是4张
+            self.currentPaperManaged.maxPictureNumber=4
+            self.currentPaperManaged.controlPictureNumber()
+            print("666666")
+            print("当前文章图片地址为：",self.currentPaperManaged.paperPicturePathList)
             subLayout=[
                 [sg.Button("载入图片1"),sg.Button("删除图片1"),sg.Button("载入图片2"),sg.Button("删除图片2"),sg.Button("刷新子窗口")],
-                [sg.Image(filename=img1FileName,key="sub2Image1",size=imageSize),
-                 sg.Image(filename=img2FileName,key="sub2Image2",size=imageSize)],
+                [sg.Image(filename=img1FileName,key="sub2Image1",size=tempSize1),
+                 sg.Image(filename=img2FileName,key="sub2Image2",size=tempSize2)],
                 ]
         else:
             self.flagSubWindowTwoActive=True
@@ -489,6 +504,7 @@ class PaperImportGui2(object):
                                     grab_anywhere=True,
                                     keep_on_top=True,
                                     finalize=True, )
+        self.subWindowTwo.set_min_size(subWindowTwoSize)
         while True:
             sub2Event,sub2Values=self.subWindowTwo.read(timeout=100)      
             if sub2Event in (None, sg.WIN_CLOSED,'关闭'):
@@ -502,7 +518,7 @@ class PaperImportGui2(object):
             if sub2Event in ("载入图片1") :
                 img1Path=sg.popup_get_folder("选取存储地址", keep_on_top=True,default_path="./imageLibrary")
                 img1Path+="/"
-                img1Name="PaperId"+str(self.currentPaperManaged.paperId)+"_img1.png"
+                img1Name="PaperId_"+str(self.currentPaperManaged.paperId)+"_img1.png"
                 img1Path+=img1Name
                 print("img1Path=",img1Path)
                 self.subWindowTwo.Hide()
@@ -544,8 +560,10 @@ class PaperImportGui2(object):
                     self.currentPaperManaged.paperPicturePathList.append(img2Path)
                 elif len(self.currentPaperManaged.paperPicturePathList)==1:
                     self.currentPaperManaged.paperPicturePathList.append(img2Path)
-                elif len(self.currentPaperManaged.paperPicturePathList)==2:
+                else:
                     self.currentPaperManaged.paperPicturePathList[1]=img2Path
+                print("555555:")
+                print("当前文章图片地址为：",self.currentPaperManaged.paperPicturePathList)
                 self.subWindowTwo.UnHide()
                 self.createSubWindowTwoFromMain()
             if sub2Event in ("删除图片2"):
@@ -558,12 +576,33 @@ class PaperImportGui2(object):
                             print ("图片2删除流程异常:",e)
                     self.currentPaperManaged.paperPicturePathList[1]=""
                 
-        #刷新子窗口2，如果有新的图片，要抓紧显示出来   
-        def refreshSubWindowTwo(self):
-            #关闭，但是不清空标志位
-            self.subWindowTwo.close()
-            self.createSubWindowTwoFromMain()
-
+    #刷新子窗口2，如果有新的图片，要抓紧显示出来   
+    def refreshSubWindowTwo(self):
+        #关闭，但是不清空标志位
+        self.subWindowTwo.close()
+        self.createSubWindowTwoFromMain()
+        #图片尺寸重置
+        
+    def pictureResize(self,inputPath,outputPath,size=(600,600),reShape=False,type="png"):
+        try:
+            inputImage=Image.open(inputPath)
+            #不改变外形，以高度为准
+            if reShape==False:
+                height=int(size[1])
+                width=int(inputImage.size[0]/inputImage.size[1]*size[1])
+            #改变外形，长宽都完全按照要求
+            else:
+                height=int(size[1])
+                width=int(size[0])
+            outputImage = inputImage.resize((width,height),Image.ANTIALIAS)                    
+            outputImage.save(outputPath,type)
+            print("图片原尺寸为：",inputImage.size)
+            print("图片{}更新完成，尺寸为{}×{}".format(inputPath,width,height))
+            return [width,height]
+        except Exception as e:
+            print("图片尺寸更新失败",e)
+            return -1
+        
 #%%定义主窗口事件和逻辑
 
     def windowEventMainwindowEventMain(self):
