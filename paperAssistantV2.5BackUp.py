@@ -13,7 +13,6 @@ import time
 import os
 from GrubAndCutScreen import GrubAndCutScreen
 from PIL import Image,ImageGrab
-from transTool import transTool
 class PaperImportGui2(object):
     def __init__(self):
         print("一个文献编辑窗口被实例化")
@@ -355,20 +354,18 @@ class PaperImportGui2(object):
             self.window.Hide()
             #定义当前子窗口的函数
             subLayout=[
-                [sg.Button("打开源文件",key="打开源文件_专注模式子界面"),sg.Button("百度翻译",key="BDtranslate"),sg.Button("清空翻译",key="clearTranslation"),sg.Button("翻译网站",key="BDTranslateInSubWindowOne"),sg.Button("确认内容修改"),],
-                [sg.Text('文章主要内容',font='Times 10',size=(45,1)),sg.Text('翻译原文',font='Times 10',size=(10,1)),],
-                [sg.Multiline(size=(20,30),font='Times 16', expand_x=True, expand_y=True,key="summaryInSubWindowOne",enable_events=True),
-                 sg.Multiline(size=(20,30),font='Times 12', expand_x=True, expand_y=True,key="textBeforeTranslate",enable_events=True)], #文章主要内容
-                [sg.Text('特点或不足',font='Times 10',size=(45,1)),sg.Text('翻译译文',font='Times 10',size=(10,1)),],
-                [sg.Multiline(size=(20,30),font='Times 16', expand_x=True, expand_y=True,key="charaInSubWindowOne",enable_events=True),
-                 sg.Multiline(size=(20,30),font='Times 12', expand_x=True, expand_y=True,key="textAfterTranslate",enable_events=True)],#文章特点  
+                [sg.Button("打开源文件",key="打开源文件_专注模式子界面"),sg.Button("谷歌翻译",key="GGTranslateInSubWindowOne"),sg.Button("百度翻译",key="BDTranslateInSubWindowOne"),sg.Button("确认内容修改"),],
+                [sg.Text('文章\n主要\n内容',font='Times 10',size=(4,4)),
+                 sg.Multiline(size=(30,30),font='Times 16', expand_x=True, expand_y=True,key="summaryInSubWindowOne",enable_events=True)], #文章主要内容
+                [sg.Text('特点\n或\n不足',font='Times 10',size=(4,4)),
+                 sg.Multiline(size=(30,30),font='Times 16', expand_x=True, expand_y=True,key="charaInSubWindowOne",enable_events=True)],#文章特点  
                 ]
         #为画面布局layout设置窗口大小调整的小机关（右下角）
         subLayout[-1].append(sg.Sizegrip())
         
         windowSize=self.getScreenSize()
-        subWindowOneSize=(500,windowSize[1]-80)
-        subWindowOneLocation=(windowSize[0]-subWindowOneSize[0]-60,0)        
+        subWindowOneSize=(400,windowSize[1]-100)
+        subWindowOneLocation=(windowSize[0]-subWindowOneSize[0]-20,0)        
         print("当前屏幕尺寸：{}；子窗口尺寸：{}；子窗口位置：{}".format(windowSize,subWindowOneSize,subWindowOneLocation))
         #创建窗口函数
         self.subWindowOne=sg.Window("专注阅读，心无杂念！",
@@ -383,9 +380,6 @@ class PaperImportGui2(object):
         self.subWindowOne.set_min_size(subWindowOneSize)
         self.subWindowOne["summaryInSubWindowOne"].update(self.currentPaperManaged.summaryReExtract)
         self.subWindowOne["charaInSubWindowOne"].update(self.currentPaperManaged.characteristic)
-        #初始化翻译工具
-        BDTransTool=transTool()
-        
         while True:
             sub1Event,sub1Values=self.subWindowOne.read(timeout=1000)       
             if not sub1Event in (None,"__TIMEOUT__"):    
@@ -441,24 +435,8 @@ class PaperImportGui2(object):
                 #打开百度翻译，直接设置为英文翻中文模式
                 open_new("https://fanyi.baidu.com/#en/zh")
                 print("打开网址：https://fanyi.baidu.com/#en/zh")
-            
-            if sub1Event in ("BDtranslate"):
-                stringBeforeTrans=self.subWindowOne["textBeforeTranslate"].get()
-                #框里没有内容，不翻译了
-                if stringBeforeTrans in ("",None):
-                    print("没有东西，不翻译了")
-                    continue
-                BDTransTool.inputString(stringBeforeTrans,transType=0,deleteWrap=True)
-                stringAfterTrans=BDTransTool.getTrans()
-                print("翻译后：",stringAfterTrans)
-                stringBeforeTrans=BDTransTool.inputWords
-                self.subWindowOne["textBeforeTranslate"].update(stringBeforeTrans)
-                self.subWindowOne["textAfterTranslate"].update(stringAfterTrans)
-            
-            if sub1Event in ("clearTranslation"):
-                self.subWindowOne["textBeforeTranslate"].update("")
-                self.subWindowOne["textAfterTranslate"].update("")
-                    
+                 
+          
         return 1
     
     
